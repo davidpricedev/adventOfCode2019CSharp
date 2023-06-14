@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AdventOfCode2019CSharp.util;
+
 namespace AdventOfCode2019CSharp.iccomp;
 
 public static class ComputerFactory
@@ -67,11 +68,6 @@ public record class Computer(
     {
         if (this.Debug)
             Aoc.Println(message);
-    }
-    public Computer Run()
-    {
-        var sequence = Sequence.Generate(this, x => x.RunNext(), x => x.Status != ComputerStatus.Halted);
-        return sequence.LastOrDefault() ?? this;
     }
 
     public Computer RunNext()
@@ -172,7 +168,7 @@ public record class Computer(
         var x = GetInParam(1);
         var y = GetInParam(2);
         var outaddr = GetOutPos(3);
-        DebugMessage( $"[{CurrentPos}, {CurrentRelBase}] adding {x} to {y}, result to &{outaddr}");
+        DebugMessage($"[{CurrentPos}, {CurrentRelBase}] adding {x} to {y}, result to &{outaddr}");
         return CopyWithNewValueAt(outaddr, x + y);
     }
 
@@ -201,7 +197,11 @@ public record class Computer(
     {
         var outval = GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] outputing {outval}");
-        return this with { CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode()), Outputs = Outputs.Concat(new List<long>() { outval }).ToList() }; 
+        return this with
+        {
+            CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode()),
+            Outputs = Outputs.Concat(new List<long>() { outval }).ToList()
+        };
     }
 
     public Computer ApplyJumpIfTrue()
@@ -221,7 +221,7 @@ public record class Computer(
     public Computer AdvancePastJump()
     {
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] jump-check failed");
-        return this with { CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode())};
+        return this with { CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode()) };
     }
 
     public Computer ApplyJump()
@@ -249,7 +249,7 @@ public record class Computer(
         var outaddr = GetOutPos(3);
         var result = x == y ? 1L : 0L;
         DebugMessage(
-                $"[{CurrentPos}, {CurrentRelBase}] equal-check result {result}, storing result to &{outaddr}");
+            $"[{CurrentPos}, {CurrentRelBase}] equal-check result {result}, storing result to &{outaddr}");
         return CopyWithNewValueAt(outaddr, result);
     }
 
@@ -257,7 +257,10 @@ public record class Computer(
     {
         var offset = (int)GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] changing relative base by {offset}");
-        return this with { CurrentRelBase = CurrentRelBase + offset, CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode())};
+        return this with
+        {
+            CurrentRelBase = CurrentRelBase + offset, CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode())
+        };
     }
 
     public Computer ApplyHalt()

@@ -1,5 +1,8 @@
 namespace AdventOfCode2019CSharp.util;
 
+/**
+ * Advent-of-code specific utilities
+ */
 public class Aoc
 {
     public static void RunPart(int day, int part, Func<IEnumerable<string>, double> partFunc) => 

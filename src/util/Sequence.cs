@@ -14,6 +14,8 @@ public static class Sequence
         {
             yield return state;
             state = nextFn(state);
-        } while (!continuePredicate(state));
+        } while (continuePredicate(state));
+
+        yield return state;
     }
 }
