@@ -5,7 +5,7 @@ namespace AdventOfCode2019CSharp.iccomp;
 
 public static class ComputerFactory
 {
-    public const int DefaultMemSize = 2048;
+    private const int DefaultMemSize = 2048;
 
     public static List<long> InputStringToList(string inputStr) =>
         inputStr.Split(",").Select(long.Parse).ToList();
@@ -56,9 +56,9 @@ public record class Computer(
     ComputerStatus Status = ComputerStatus.Running
 )
 {
-    public int CurrentInstruction() => (int)Memory[CurrentPos];
+    private int CurrentInstruction() => (int)Memory[CurrentPos];
 
-    public int CurrentOpCode() => CurrentInstruction() - (100 * (CurrentInstruction() / 100));
+    private int CurrentOpCode() => CurrentInstruction() - (100 * (CurrentInstruction() / 100));
 
     public long ValueAt(int position) => Memory[position];
 
@@ -82,7 +82,7 @@ public record class Computer(
         return sequence.LastOrDefault() ?? this;
     }
 
-    public Tuple<Computer, List<long>> RunInput(List<long> moreInputs)
+    public Tuple<Computer, List<long>> RunInput(IEnumerable<long> moreInputs)
     {
         var withNewInputs = this with { Inputs = Inputs.Concat(moreInputs).ToList() };
         var finalState = withNewInputs.RunUntilPrompt();
@@ -90,7 +90,7 @@ public record class Computer(
         return new Tuple<Computer, List<long>>(finalState, outputs);
     }
 
-    public Computer CopyWithNewValueAt(int position, long newValue)
+    private Computer CopyWithNewValueAt(int position, long newValue)
     {
         var newMemory = Memory.Select((x, index) => index == position ? newValue : x).ToList();
         return this with { Memory = newMemory, CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode()) };
@@ -98,7 +98,7 @@ public record class Computer(
 
     public string MemoryAsString() => string.Join(",", Memory);
 
-    public long GetInParam(int paramOrd)
+    private long GetInParam(int paramOrd)
     {
         var mode = GetParamModes()[paramOrd - 1];
         return mode switch
@@ -110,7 +110,7 @@ public record class Computer(
         };
     }
 
-    public int GetOutPos(int paramOrd)
+    private int GetOutPos(int paramOrd)
     {
         var mode = GetParamModes()[paramOrd - 1];
         return mode switch
@@ -121,7 +121,7 @@ public record class Computer(
         };
     }
 
-    public Computer ApplyOpcode()
+    private Computer ApplyOpcode()
     {
         var opCode = CurrentOpCode();
         return opCode switch
@@ -140,7 +140,7 @@ public record class Computer(
         };
     }
 
-    public int OpcodeLength(int opcode) =>
+    private int OpcodeLength(int opcode) =>
         opcode switch
         {
             1 => 4,
@@ -156,14 +156,14 @@ public record class Computer(
             _ => throw new Exception($"{Aoc.TableFlip()} opcode {opcode} is unknown")
         };
 
-    public List<int> GetParamModes()
+    private List<int> GetParamModes()
     {
         var instruction = CurrentInstruction();
         var modeString = (instruction / 100).ToString().PadLeft(3, '0');
-        return modeString.ToCharArray().Select(c => int.Parse(c.ToString())).ToList();
+        return modeString.ToCharsAsStr().Select(int.Parse).Reverse().ToList();
     }
 
-    public Computer ApplyAdd()
+    private Computer ApplyAdd()
     {
         var x = GetInParam(1);
         var y = GetInParam(2);
@@ -172,7 +172,7 @@ public record class Computer(
         return CopyWithNewValueAt(outaddr, x + y);
     }
 
-    public Computer ApplyMultiply()
+    private Computer ApplyMultiply()
     {
         var x = GetInParam(1);
         var y = GetInParam(2);
@@ -181,7 +181,7 @@ public record class Computer(
         return CopyWithNewValueAt(outaddr, x * y);
     }
 
-    public Computer ApplyInput()
+    private Computer ApplyInput()
     {
         if (Inputs.Count == 0 || InputPtr >= Inputs.Count)
             return this with { Status = ComputerStatus.WaitingForInput };
@@ -193,7 +193,7 @@ public record class Computer(
         return CopyWithNewValueAt(outaddr, inputVal) with { InputPtr = InputPtr + 1 };
     }
 
-    public Computer ApplyOutput()
+    private Computer ApplyOutput()
     {
         var outval = GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] outputing {outval}");
@@ -204,34 +204,34 @@ public record class Computer(
         };
     }
 
-    public Computer ApplyJumpIfTrue()
+    private Computer ApplyJumpIfTrue()
     {
         var checkVal = GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] jump-if-true {checkVal}");
         return checkVal != 0 ? ApplyJump() : AdvancePastJump();
     }
 
-    public Computer ApplyJumpIfFalse()
+    private Computer ApplyJumpIfFalse()
     {
         var checkVal = GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] jump-if-false {checkVal}");
         return checkVal == 0 ? ApplyJump() : AdvancePastJump();
     }
 
-    public Computer AdvancePastJump()
+    private Computer AdvancePastJump()
     {
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] jump-check failed");
         return this with { CurrentPos = CurrentPos + OpcodeLength(CurrentOpCode()) };
     }
 
-    public Computer ApplyJump()
+    private Computer ApplyJump()
     {
         var jumpTarget = (int)GetInParam(2);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] jumping to &{jumpTarget}");
         return this with { CurrentPos = jumpTarget };
     }
 
-    public Computer ApplyLessThan()
+    private Computer ApplyLessThan()
     {
         var x = GetInParam(1);
         var y = GetInParam(2);
@@ -242,7 +242,7 @@ public record class Computer(
         return CopyWithNewValueAt(outaddr, result);
     }
 
-    public Computer ApplyEqual()
+    private Computer ApplyEqual()
     {
         var x = GetInParam(1);
         var y = GetInParam(2);
@@ -253,7 +253,7 @@ public record class Computer(
         return CopyWithNewValueAt(outaddr, result);
     }
 
-    public Computer ApplyChangeRelBase()
+    private Computer ApplyChangeRelBase()
     {
         var offset = (int)GetInParam(1);
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] changing relative base by {offset}");
@@ -263,7 +263,7 @@ public record class Computer(
         };
     }
 
-    public Computer ApplyHalt()
+    private Computer ApplyHalt()
     {
         DebugMessage($"[{CurrentPos}, {CurrentRelBase}] halting");
         return this with { Status = ComputerStatus.Halted };

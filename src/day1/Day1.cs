@@ -5,10 +5,12 @@ namespace AdventOfCode2019CSharp.day1;
 
 public static class Day1
 {
+    private const int DayNumber = 1;
+        
     public static void Run()
     {
-        Aoc.RunPart(1, 1, Part1);
-        Aoc.RunPart(1, 2, Part2);
+        Aoc.RunPart(DayNumber, 1, Part1);
+        Aoc.RunPart(DayNumber, 2, Part2);
     }
 
     static double Part1(IEnumerable<string> lines) => lines.Select(x => MassToFuelNaive(double.Parse(x))).Sum();
